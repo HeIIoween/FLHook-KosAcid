@@ -81,7 +81,7 @@ void CCmds::CmdATestID(wstring wscCharname)
 		PrintError();
 		return;
 	}
-	wscCharname = (Players.GetActiveCharacterName(iClientIDTarget));
+	wscCharname = ((wchar_t*)Players.GetActiveCharacterName(iClientIDTarget));
 	HkMsg(wscCharname,L"atprocess");
 	Print(L"OK\n");
 }
@@ -96,7 +96,7 @@ void CCmds::CmdTestACID(wstring wscCharname)
 		PrintError();
 		return;
 	}
-	wscCharname = (Players.GetActiveCharacterName(iClientIDTarget));
+	wscCharname = ((wchar_t*)Players.GetActiveCharacterName(iClientIDTarget));
 	if(set_AntiCheat){HkMsg(wscCharname,L"test");}
 	Print(L"OK\n");
 }
@@ -356,14 +356,14 @@ void CCmds::CmdKill(wstring wscCharname)
 			return;
 		}
 		if(HkGetClientIDByShip(iTarget))
-			wscAdminKiller = Players.GetActiveCharacterName(admin.iClientID);
+			wscAdminKiller = (wchar_t*)Players.GetActiveCharacterName(admin.iClientID);
 		pub::SpaceObj::SetRelativeHealth(iTarget, 0.0f);
 		Print(L"OK\n");
 		return;
 	}
 
 	if(admin.iClientID)
-		wscAdminKiller = Players.GetActiveCharacterName(admin.iClientID);
+		wscAdminKiller = (wchar_t*)Players.GetActiveCharacterName(admin.iClientID);
 	else
 		wscAdminKiller = L"Console";
 	if(HKSUCCESS(HkKill(wscCharname)))

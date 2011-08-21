@@ -14,7 +14,7 @@ void __stdcall HkCb_SendChat(uint iClientID, uint iTo, uint iSize, void *pRDL)
 			// extract text from rdlReader
 			BinaryRDLReader rdl;
 			uint iRet;
-			rdl.extract_text_from_buffer(wszBuf, sizeof(wszBuf), iRet, (const char*)pRDL, iSize);
+			rdl.extract_text_from_buffer((unsigned short*)wszBuf, sizeof(wszBuf), iRet, (const char*)pRDL, iSize);
 
 			wstring wscBuf = wszBuf;
 			wstring wscSender = wscBuf.substr(0, wscBuf.length() - HkIServerImpl::g_iTextLen - 2);
@@ -125,7 +125,7 @@ void __stdcall HkCb_SendChat(uint iClientID, uint iTo, uint iSize, void *pRDL)
 						}
 					}
 					ClientInfo[iClientID].iSentIds.push_back(iClientIDTarget);
-					wstring wscTo = Players.GetActiveCharacterName(iClientID);
+					wstring wscTo = (wchar_t*)Players.GetActiveCharacterName(iClientID);
 					wscSender = wscTo;
 					wscTo += L"(AFK)";
 

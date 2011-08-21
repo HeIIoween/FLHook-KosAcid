@@ -1,4 +1,5 @@
 #include "hook.h"
+#pragma warning(disable:4996)
 
 Archetype::AClassType TypeStrToEnum(string scType);
 uint TypeStrToObjUint(string scType);

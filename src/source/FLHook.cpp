@@ -3,6 +3,7 @@
 #include "hook.h"
 #include "CConsole.h"
 #include "CSocket.h"
+#pragma warning(disable:4996)
 
 // structs
 struct SOCKET_CONNECTION

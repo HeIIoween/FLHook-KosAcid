@@ -31,6 +31,7 @@ EDITED by mc_horst for use in FLHook
 #include <errno.h>
 #include <stdio.h>
 #include <io.h>
+#pragma warning(disable:4996)
 
 /* Very Secret Key - this is Microsoft Security In Action[tm] */
 const char gene[] = "Gene";
