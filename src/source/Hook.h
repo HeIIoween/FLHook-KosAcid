@@ -330,7 +330,6 @@ struct CARGO_INFO
 	uint	iID;
 	int		iCount;
 	uint	iArchID;
-	float	fStatus;
 	bool	bMission;
 	bool	bMounted;
 };

@@ -3388,7 +3388,7 @@ void UserCmd_Pods(uint iClientID, wstring wscParam)
 		continue;
 		if(!it->bMounted && gi->iIDS)
 		{
-			PrintUserCmdText(iClientID, L"  %s=%u", HkGetWStringFromIDS(gi->iIDSName).c_str(), it->iCount);
+			PrintUserCmdText(iClientID, L"  %s=%u", HkGetWStringFromIDS(gi->iIDS).c_str(), it->iCount);
 			iNum++;
 		}
 	}
@@ -3420,7 +3420,7 @@ void UserCmd_Pods(uint iClientID, wstring wscParam)
 				{
 					counter+=ToInt(stows(lstI->scValue).c_str());
 				}
-				PrintUserCmdText(iClientID,L"[Cargo Pod = %s capacity left = %i health = %f]",HkGetWStringFromIDS(gi->iIDSName).c_str(),pod->capacity-counter,it->fStatus);
+				PrintUserCmdText(iClientID,L"[Cargo Pod = %s capacity left = %i]",HkGetWStringFromIDS(gi->iIDS).c_str(),pod->capacity-counter);
 				IniDelSection(scUserStore,scSection);
 				foreach(amount,INISECTIONVALUE,lstgoods)
 				{
@@ -3430,7 +3430,7 @@ void UserCmd_Pods(uint iClientID, wstring wscParam)
 					    const GoodInfo *ls = GoodList::find_by_id(ToInt(stows(lstgoods->scKey).c_str()));;
 		                if(!ls)
 		                   continue;
-					    PrintUserCmdText(iClientID, L"  %s=%s", HkGetWStringFromIDS(ls->iIDSName).c_str(), stows(lstgoods->scValue).c_str());
+					    PrintUserCmdText(iClientID, L"  %s=%s", HkGetWStringFromIDS(ls->iIDS).c_str(), stows(lstgoods->scValue).c_str());
 					}
 				}
 			}

@@ -3327,7 +3327,7 @@ void __stdcall SPScanCargo(unsigned int const &p1, unsigned int const &p2, unsig
 				        {
 					        counter+=ToInt(stows(lstI->scValue).c_str());
 				        }
-				        PrintUserCmdText(p3,L"[Cargo Pod health = %f]",it->fStatus);
+//				        PrintUserCmdText(p3,L"[Cargo Pod health = %f]",it->fStatus);
 				        IniDelSection(scUserStore,scSection);
 				        foreach(amount,INISECTIONVALUE,lstgoods)
 				        {
@@ -3337,7 +3337,7 @@ void __stdcall SPScanCargo(unsigned int const &p1, unsigned int const &p2, unsig
 					            const GoodInfo *ls = GoodList::find_by_id(ToInt(stows(lstgoods->scKey).c_str()));;
 		                        if(!ls)
 		                            continue;
-					            PrintUserCmdText(p3, L"  %s=%s", HkGetWStringFromIDS(ls->iIDSName).c_str(), stows(lstgoods->scValue).c_str());
+					            PrintUserCmdText(p3, L"  %s=%s", HkGetWStringFromIDS(ls->iIDS).c_str(), stows(lstgoods->scValue).c_str());
 							}
 						}
 					}

@@ -844,17 +844,8 @@ struct GoodInfo
 	uint ArchID;
 	uint type; // == 0 when commodity
 	uint i3; //hash/CRC thing
-	uint iShipGoodID; // if type = GOODINFO_TYPE_HULL
-	float fPrice;
-	float fGoodSellPrice;
-	float fBadBuyPrice;
-	float fBadSellPrice;
-	float fGoodBuyPrice;
-	uint iJumpDist;
-	float iDunno2[6];
-	uint iIDSName;
+	float iDunno2[13];
 	uint iIDS;
-	uint iHullGoodID; // if type = GOODINFO_TYPE_SHIP
 };
 
 namespace GoodList 

@@ -877,7 +877,7 @@ void GoodsTranfer()
 	                        HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
 							pub::Player::GetRemainingHoldSize(iClientID, fRemHold);
 							int iRem=(int)fRemHold;
-						    Archetype::Equipment *eq = Archetype::GetEquipment(ToInt(stows(lst->scKey).c_str()));
+						    Archetype::Equipment *eq = Archetype::GetEquipment(ToUint(stows(lst->scKey).c_str()));
 						    int GoodCounter = ToInt(stows(lst->scValue).c_str());
 						    if(iRem<eq->fVolume*GoodCounter)
 						    {
@@ -889,7 +889,7 @@ void GoodsTranfer()
 						    }
 						    if(iGoods>0 && ClientInfo[iClientID].bHold)
 						    {
-								pub::Player::AddCargo(iClientID, ToInt(stows(lst->scKey.c_str())), iGoods, 1, false);
+								pub::Player::AddCargo(iClientID, ToUint(stows(lst->scKey.c_str())), iGoods, 1, false);
 								IniWrite(scUserStore, scSection, lst->scKey, itos(GoodCounter-iGoods));
 								ClientInfo[iClientID].bHold=false;
 						    }
