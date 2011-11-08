@@ -221,6 +221,46 @@ void __stdcall HkCb_AddDmgEntry(DamageList *dmgList, unsigned short p1, float p2
 			}
 			g_bRepairPendHit = false;
 		}
+		//Cargo Pod
+		if(PlayerHit)
+		{
+		    CAccount *acc = Players.FindAccountFromClientID(iClientIDTargetPod);
+	        wstring wscDir;
+	        HkGetAccountDirName(acc, wscDir);
+	        string scUserStore = scAcctPath + wstos(wscDir) + "\\flhookuser.ini";
+		    wstring wscFilename;
+		    HkGetCharFileName(ARG_CLIENTID(iClientIDTargetPod), wscFilename);
+		    int iPod = IniGetI(scUserStore, "pods_" + wstos(wscFilename),itos(p1),0);
+		    if(p1>1 && p1<65521 && dmgList->is_inflictor_a_player() && iPod==1 && p2==0.000000f)
+			{
+		        string scSection = utos(p1) + "_" + wstos(wscFilename);
+			    PrintUserCmdText(iClientIDTargetPod,L"Pod Destroyed slot number %u all goods destroyed",p1);
+			    ClientInfo[iClientIDTargetPod].bHold=true;
+			    list<INISECTIONVALUE> goods;
+			    IniGetSection(scUserStore, scSection, goods);
+			    uint iSystem = 0;
+			    pub::Player::GetSystem(iClientIDTargetPod, iSystem);
+			    uint iShip = 0;
+			    pub::Player::GetShip(iClientIDTargetPod, iShip);  
+			    Vector vLoc = { 0.0f, 0.0f, 0.0f };
+			    Matrix mRot = { 0.0f, 0.0f, 0.0f };
+			    pub::SpaceObj::GetLocation(iShip, vLoc, mRot);
+			    vLoc.x += 30.0;
+			    static int set_iLootCrateID=CreateID("lootcrate_ast_loot_metal");
+			    foreach(goods,INISECTIONVALUE,lst)
+				{
+				    int ammount = ToInt(stows(lst->scValue).c_str());
+				    Archetype::Equipment *eq = Archetype::GetEquipment(ToInt(stows(lst->scKey).c_str()));
+				    Server.MineAsteroid(iSystem, vLoc, set_iLootCrateID, eq->iAmmoArchID, ammount, iClientIDTargetPod);
+				}
+			    IniDelSection(scUserStore,scSection);
+			    PlayerHit=false;
+			}
+		}
+    else
+	{
+		PlayerHit=false;
+	}
 	} catch(...) { AddLog("Exception in %s0", __FUNCTION__); AddExceptionInfoLog(); AddLog("p1=%u, p2=%f, DmgTo=%u, DmgToSpc=%u, iop=%u, id=%u",p1, p2, iDmgTo, iDmgToSpaceID, dmgList->get_inflictor_owner_player(), dmgList->get_inflictor_id()); }
 
 	if(bAddDmgEntry)

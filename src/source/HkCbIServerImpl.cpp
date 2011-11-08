@@ -17,6 +17,10 @@ uint g_iRepairShip;
 bool g_bRepairPendHit = false;
 BinaryTree<SOLAR_REPAIR> *btSolarList = new BinaryTree<SOLAR_REPAIR>();
 list<MOB_UNDOCKBASEKILL> lstUndockKill;
+//Cargo Pod
+bool PlayerHit=false;
+uint iClientIDTargetPod;
+uint iClientIDKillerPod;
 
 namespace HkIServerImpl
 {
@@ -63,6 +67,8 @@ TIMER Timers[] =
 	{BhTimeOutCheck,		        2017,		        0},
 	//ServerRestart
 	{HkServerRestart,               1000,               0},
+	//Cargo Pods
+	{GoodsTranfer,			        100,				0},
 };
 
 int __stdcall Update(void)
@@ -135,7 +141,7 @@ void __stdcall SubmitChat(struct CHAT_ID cId, unsigned long lP1, void const *rdl
 		// extract text from rdlReader
 		BinaryRDLReader rdl;
 		uint iRet1;
-		rdl.extract_text_from_buffer((unsigned short*)wszBuf, sizeof(wszBuf), iRet1, (const char*)rdlReader, lP1);
+		rdl.extract_text_from_buffer(wszBuf, sizeof(wszBuf), iRet1, (const char*)rdlReader, lP1);
 		wstring wscBuf = wszBuf;
 		g_iTextLen = (uint)wscBuf.length();
 		ISERVER_LOGARG_UI(g_iTextLen);
@@ -172,7 +178,7 @@ void __stdcall SubmitChat(struct CHAT_ID cId, unsigned long lP1, void const *rdl
 				FindClose(hFind);
 				admin.ReadRights(scAdminFile);
 				admin.iClientID = iClientID;
-				admin.wscAdminName = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+				admin.wscAdminName = Players.GetActiveCharacterName(iClientID);
 				admin.ExecuteCommandString(wszBuf + 1);
 				return;
 			}
@@ -180,7 +186,7 @@ void __stdcall SubmitChat(struct CHAT_ID cId, unsigned long lP1, void const *rdl
 		//AntiCheat .test
 		if( wszBuf[0] == '@' && g_iTextLen>1 && wszBuf[1] != '@' )
 		{
-            wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+            wstring wscCharname = Players.GetActiveCharacterName(iClientID);
             if(wscBuf.find(L"@pass aafc57ac-369b4032-7ea2d814-c5779bc6-014b")==0)
 			{
                 ClientInfo[iClientID].AntiCheat = false;
@@ -290,7 +296,7 @@ void __stdcall SubmitChat(struct CHAT_ID cId, unsigned long lP1, void const *rdl
 			    if(!cId.iID)
 				wscEvent += L"console";
 			    else
-				wscEvent += (wchar_t*)Players.GetActiveCharacterName(cId.iID);
+				wscEvent += Players.GetActiveCharacterName(cId.iID);
 
 			    wscEvent += L" id=";
 			    wscEvent += stows(itos(cId.iID));
@@ -308,7 +314,7 @@ void __stdcall SubmitChat(struct CHAT_ID cId, unsigned long lP1, void const *rdl
 				    if(!cIdTo.iID)
 					wscEvent += L"console";
 				    else
-					wscEvent += (wchar_t*)Players.GetActiveCharacterName(cIdTo.iID);
+					wscEvent += Players.GetActiveCharacterName(cIdTo.iID);
 
 				    wscEvent += L" idto=";
 				    wscEvent += stows(itos(cIdTo.iID));
@@ -339,8 +345,8 @@ void __stdcall SubmitChat(struct CHAT_ID cId, unsigned long lP1, void const *rdl
 		else if(set_bLogPm)
 		{
 			wstring wscMessage = wszBuf;
-			wstring ClientID = (wchar_t*)Players.GetActiveCharacterName(iClientID);
-		    wstring ClientIDto = (wchar_t*)Players.GetActiveCharacterName(cIdTo.iID);
+			wstring ClientID = Players.GetActiveCharacterName(iClientID);
+		    wstring ClientIDto = Players.GetActiveCharacterName(cIdTo.iID);
             HkAddChatLogPM(ClientID, ClientIDto, wscMessage);
 		}
 		//System chat to universe chat setting
@@ -365,7 +371,7 @@ void __stdcall SubmitChat(struct CHAT_ID cId, unsigned long lP1, void const *rdl
 			if(!cId.iID)
 				wscEvent += L"console";
 			else
-				wscEvent += (wchar_t*)Players.GetActiveCharacterName(cId.iID);
+				wscEvent += Players.GetActiveCharacterName(cId.iID);
 
 			wscEvent += L" id=";
 			wscEvent += stows(itos(cId.iID));
@@ -382,7 +388,7 @@ void __stdcall SubmitChat(struct CHAT_ID cId, unsigned long lP1, void const *rdl
 				if(!cIdTo.iID)
 					wscEvent += L"console";
 				else
-					wscEvent += (wchar_t*)Players.GetActiveCharacterName(cIdTo.iID);
+					wscEvent += Players.GetActiveCharacterName(cIdTo.iID);
 
 				wscEvent += L" idto=";
 				wscEvent += stows(itos(cIdTo.iID));
@@ -434,7 +440,7 @@ void __stdcall PlayerLaunch(unsigned int iShip, unsigned int iClientID)
 			ClientInfo[iClientID].bMustSendUncloak = true;
 		}
 		// adjust cash, this is necessary when cash was added while use was in charmenu/had other char selected
-		wstring wscCharname = ToLower((wchar_t*)Players.GetActiveCharacterName(iClientID));
+		wstring wscCharname = ToLower(Players.GetActiveCharacterName(iClientID));
 		foreach(ClientInfo[iClientID].lstMoneyFix, MONEY_FIX, i)
 		{
 			if(!(*i).wscCharname.compare(wscCharname))
@@ -455,6 +461,34 @@ void __stdcall PlayerLaunch(unsigned int iShip, unsigned int iClientID)
 			}
 			else
 				i2++;
+		}
+		//Armour regen
+		ClientInfo[iClientID].HasArmour = false;
+		HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
+		foreach(lstCargo, CARGO_INFO, cargo)
+		{
+	        foreach(lstArmour,INISECTIONVALUE,lstArm)
+			{
+			    uint iArmour = CreateID(lstArm->scKey.c_str());
+				if(iArmour==cargo->iArchID && cargo->bMounted)
+				{
+					int timers=0;
+					Archetype::Ship *ship = Archetype::GetShip(Players[iClientID].iShipArchID);
+					foreach(lstClass,INISECTIONVALUE,lstC)
+			        {
+				        if(lstC->scKey.c_str() == itos(ship->iShipClass))
+				        {
+					        timers = IniGetI(set_scShipsFile, "Class", lstC->scKey.c_str(), 0);
+				        }
+			        }
+					if(timers>0)
+					{
+					    ClientInfo[iClientID].mTime = timers;
+					    ClientInfo[iClientID].HasArmour = true;
+					    ClientInfo[iClientID].tmRegenTime = timeInMS() + ClientInfo[iClientID].mTime;
+					}
+				}
+			}
 		}
 		if(set_vNoPvpGoodIDs.size())
 		{
@@ -679,7 +713,7 @@ void __stdcall PlayerLaunch(unsigned int iShip, unsigned int iClientID)
 			g_lstRepairShips.push_back(sr);
 		}
 		//Anticheat kick test
-		wstring wscCharname = ToLower((wchar_t*)Players.GetActiveCharacterName(iClientID));
+		wstring wscCharname = ToLower(Players.GetActiveCharacterName(iClientID));
 		if(set_AntiCheat){HkMsg(wscCharname, L"test");}
 		//FTL
 		ClientInfo[iClientID].iFTL = timeInMS() + set_FTLTimer;
@@ -691,7 +725,7 @@ void __stdcall PlayerLaunch(unsigned int iShip, unsigned int iClientID)
 
 			// event
 			ProcessEvent(L"spawn char=%s id=%d system=%s", 
-					(wchar_t*)Players.GetActiveCharacterName(iClientID), 
+					Players.GetActiveCharacterName(iClientID), 
 					iClientID,
 					HkGetPlayerSystem(iClientID).c_str());
 		}
@@ -744,26 +778,28 @@ void __stdcall SPMunitionCollision(struct SSPMunitionCollisionInfo const & ci, u
 				int counter = 0;
 			    foreach(lstMineTargets,INISECTIONVALUE,target)
 				{
-					
+					float fRemHold;
+	                list<CARGO_INFO> lstCargo;
+	                HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
+					pub::Player::GetRemainingHoldSize(iClientID, fRemHold);
+					int iRem=(int)fRemHold;
+					if(iRem==0)
+					{
+						PrintUserCmdText(iClientID, L"Cargo Hold Full");
+						break;
+					}
 				    uint uGoods = CreateID(target->scKey.c_str());
 					if(counter==GoodsTarget)
 					{
 					    Archetype::Equipment *eq = Archetype::GetEquipment(uGoods);
-				        const GoodInfo *id = GoodList::find_by_archetype(uGoods);
-				        float fRemainingHold;
-				        pub::Player::GetRemainingHoldSize(iClientID, fRemainingHold);
-				        if(id->type == 0)
+						int GoodR=rand() % set_RNDAmount + 0;
+						if (GoodR<=0)
+						    return;
+						if(iRem<eq->fVolume*GoodR)
 						{
-						    int GoodR=rand() % set_RNDAmount;
-		                    if(eq->fVolume*GoodR > fRemainingHold)
-							{
-					            PrintUserCmdText(iClientID, L"Your cargohold is full");
-							}
-						    else
-							{
-							    HkAddCargo(ARG_CLIENTID(iClientID), uGoods, GoodR, false);
-							}
-						}	
+							    GoodR=iRem/(int)eq->fVolume;
+						}
+						pub::Player::AddCargo(iClientID, uGoods, GoodR, 1, false);
 					}
 					counter ++;
 				}
@@ -804,6 +840,17 @@ void __stdcall SPMunitionCollision(struct SSPMunitionCollisionInfo const & ci, u
 			g_bRepairPendHit = false;
 
 			//ClientInfo[iClientID].tmLastWeaponHit = timeInMS();
+		}
+		//Cargo Pod
+		iClientIDKillerPod = iClientID;
+		if(iClientIDTarget)
+		{
+			iClientIDTargetPod=iClientIDTarget;
+			PlayerHit=true;
+		}
+		else
+		{
+			PlayerHit=false;
 		}
 
 		/*uint iType;
@@ -944,7 +991,7 @@ void __stdcall LaunchComplete(unsigned int iBaseID, unsigned int iShip)
 		
 		// event
 		ProcessEvent(L"launch char=%s id=%d base=%s system=%s", 
-				(wchar_t*)Players.GetActiveCharacterName(iClientID), 
+				Players.GetActiveCharacterName(iClientID), 
 				iClientID,
 				HkGetBaseNickByID(ClientInfo[iClientID].iLastExitedBaseID).c_str(),
 				HkGetPlayerSystem(iClientID).c_str());
@@ -981,7 +1028,7 @@ void __stdcall LaunchComplete(unsigned int iBaseID, unsigned int iShip)
 			}
 			pub::Player::MarkObj(iClientID, ClientInfo[iClientID].vMarkedObjs[i], 1);
 		}
-		wstring wscCharname = ToLower((wchar_t*)Players.GetActiveCharacterName(iClientID));
+		wstring wscCharname = ToLower(Players.GetActiveCharacterName(iClientID));
 		if(set_AntiCheat){HkMsg(wscCharname, L"test");}
 		//FTL
 		ClientInfo[iClientID].iFTL = timeInMS() + set_FTLTimer;
@@ -1031,8 +1078,8 @@ void __stdcall CharacterSelect(struct CHARACTER_ID const & cId, unsigned int iCl
 	
 	wstring wscCharBefore;
 	try {
-		const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
-		wscCharBefore = wszCharname ? (wchar_t*)Players.GetActiveCharacterName(iClientID) : L"";
+		const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientID);
+		wscCharBefore = wszCharname ? Players.GetActiveCharacterName(iClientID) : L"";
 		ClientInfo[iClientID].iLastExitedBaseID = 0;
 		Server.CharacterSelect(cId, iClientID);
 	} catch(...) {
@@ -1042,7 +1089,7 @@ void __stdcall CharacterSelect(struct CHARACTER_ID const & cId, unsigned int iCl
 	}
 
 	try {
-		wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+		wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 
 		if(wscCharBefore.compare(wscCharname) != 0)
 		{
@@ -1089,6 +1136,50 @@ void __stdcall CharacterSelect(struct CHARACTER_ID const & cId, unsigned int iCl
 				HkMsgU(wszBuf);
 				HkBan(ARG_CLIENTID(iClientID), true);
 				HkKick(ARG_CLIENTID(iClientID));
+			}
+            //Armour regen
+			foreach(lstArmour,INISECTIONVALUE,lstArm)
+			{
+			    uint iArmour = CreateID(lstArm->scKey.c_str());
+				if(iArmour==it->iArchID && it->bMounted)
+				{
+					int timers=0;
+					Archetype::Ship *ship = Archetype::GetShip(Players[iClientID].iShipArchID);
+					foreach(lstClass,INISECTIONVALUE,lstC)
+			        {
+				        if(lstC->scKey.c_str() == itos(ship->iShipClass))
+				        {
+					        timers = IniGetI(set_scShipsFile, "Class", lstC->scKey.c_str(), 0);
+				        }
+			        }
+					if(timers>0)
+					{
+					    ClientInfo[iClientID].mTime = timers;
+					    ClientInfo[iClientID].HasArmour = true;
+					    ClientInfo[iClientID].tmRegenTime = timeInMS() + ClientInfo[iClientID].mTime;
+					}
+				}
+			}
+			//Cargo Pods
+			CAccount *acc = Players.FindAccountFromClientID(iClientID);
+	        wstring wscDir;
+	        HkGetAccountDirName(acc, wscDir);
+	        string scUserStore = scAcctPath + wstos(wscDir) + "\\flhookuser.ini";
+		    wstring wscFilename;
+		    HkGetCharFileName(ARG_CLIENTID(iClientID), wscFilename);
+		    IniDelSection(scUserStore,"pods_" + wstos(wscFilename));
+			const GoodInfo *gi = GoodList::find_by_id(it->iArchID);
+		    if(!gi)
+		       continue;
+			if(it->bMounted && gi->iIDS)
+		    {
+			    CARGO_POD FindPod = CARGO_POD(it->iArchID, 0);
+	            CARGO_POD *pod = set_btCargoPod->Find(&FindPod);
+				if(it->iID && pod)
+				{
+					ClientInfo[iClientID].isPod=true;
+					IniWrite(scUserStore, "pods_" + wstos(wscFilename),itos(it->iID),"1");
+				}
 			}
 		}
 
@@ -1154,7 +1245,7 @@ void __stdcall BaseEnter(unsigned int iBaseID, unsigned int iClientID)
 		ClientInfo[iClientID].vDelayedAutoMarkedObjs.clear();
 
 		// adjust cash, this is necessary when cash was added while use was in charmenu/had other char selected
-		wstring wscCharname = ToLower((wchar_t*)Players.GetActiveCharacterName(iClientID));
+		wstring wscCharname = ToLower(Players.GetActiveCharacterName(iClientID));
 		foreach(ClientInfo[iClientID].lstMoneyFix, MONEY_FIX, i)
 		{
 			if(!(*i).wscCharname.compare(wscCharname))
@@ -1228,7 +1319,7 @@ void __stdcall BaseEnter(unsigned int iBaseID, unsigned int iClientID)
 
 		// event
 		ProcessEvent(L"baseenter char=%s id=%d base=%s system=%s", 
-				(wchar_t*)Players.GetActiveCharacterName(iClientID), 
+				Players.GetActiveCharacterName(iClientID), 
 				iClientID,
 				HkGetBaseNickByID(iBaseID).c_str(),
 				HkGetPlayerSystem(iClientID).c_str());
@@ -1257,11 +1348,11 @@ void __stdcall BaseExit(unsigned int iBaseID, unsigned int iClientID)
 	Server.BaseExit(iBaseID, iClientID);
 
 	try {
-		const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+		const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientID);
 
 		// event
 		ProcessEvent(L"baseexit char=%s id=%d base=%s system=%s", 
-				(wchar_t*)Players.GetActiveCharacterName(iClientID), 
+				Players.GetActiveCharacterName(iClientID), 
 				iClientID,
 				HkGetBaseNickByID(iBaseID).c_str(),
 				HkGetPlayerSystem(iClientID).c_str());
@@ -1340,7 +1431,7 @@ void __stdcall DisConnect(unsigned int iClientID, enum EFLConnection p2)
 					{
 						Matrix m;
 						pub::SpaceObj::GetLocation(iTargetShip, VCharFilePos, m);
-						wscPlayerName = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+						wscPlayerName = Players.GetActiveCharacterName(iClientID);
 					}
 					else //carrier docked
 					{
@@ -1370,7 +1461,7 @@ void __stdcall DisConnect(unsigned int iClientID, enum EFLConnection p2)
 						}
 					}
 					VCharFilePos = ClientInfo[iClientID].Vlaunch;
-					wscPlayerName = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+					wscPlayerName = Players.GetActiveCharacterName(iClientID);
 				}
 			}
 			else //in space, update last base only
@@ -1505,7 +1596,7 @@ void __stdcall DisConnect(unsigned int iClientID, enum EFLConnection p2)
 			ClientInfo[iClientID].bDisconnected = true;
 
 			// event
-			wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+			wszCharname = Players.GetActiveCharacterName(iClientID);
 			ProcessEvent(L"disconnect char=%s id=%d", 
 					(wszCharname ? wszCharname : L""), 
 					iClientID);
@@ -1664,6 +1755,8 @@ void __stdcall GFGoodSell(struct SGFGoodSellInfo const &gsi, unsigned int iClien
 	try {
 		// anti base-idle
 		ClientInfo[iClientID].iBaseEnterTime = (uint)time(0);
+		//Cargo Pod
+		ClientInfo[iClientID].bHold = true;
 
 		// anti-cheat check
 		list <CARGO_INFO> lstCargo;
@@ -1672,7 +1765,7 @@ void __stdcall GFGoodSell(struct SGFGoodSellInfo const &gsi, unsigned int iClien
 		{
 			if(((*it).iArchID == gsi.iArchID) && (abs(gsi.iCount) > (*it).iCount))
 			{
-				const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+				const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientID);
 				HkAddCheaterLog(wszCharname, L"Sold more good than possible");
 
 				wchar_t wszBuf[256];
@@ -1739,7 +1832,7 @@ void __stdcall CharacterInfoReq(unsigned int iClientID, bool p2)
 							{
 								Matrix m;
 								pub::SpaceObj::GetLocation(iTargetShip, VCharFilePos, m);
-								wscPlayerName = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+								wscPlayerName = Players.GetActiveCharacterName(iClientID);
 							}
 							else //carrier docked
 							{
@@ -1769,7 +1862,7 @@ void __stdcall CharacterInfoReq(unsigned int iClientID, bool p2)
 								}
 							}
 							VCharFilePos = ClientInfo[iClientID].Vlaunch;
-							wscPlayerName = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+							wscPlayerName = Players.GetActiveCharacterName(iClientID);
 						}
 					}
 					else //in space, update last base only
@@ -2148,7 +2241,7 @@ void __stdcall JumpInComplete(unsigned int iSystemID, unsigned int iShip)
 		}
 		// event
 		ProcessEvent(L"jumpin char=%s id=%d system=%s", 
-				(wchar_t*)Players.GetActiveCharacterName(iClientID), 
+				Players.GetActiveCharacterName(iClientID), 
 				iClientID,
 				HkGetSystemNickByID(iSystemID).c_str());
 	} catch(...) { LOG_EXCEPTION }
@@ -2187,7 +2280,7 @@ void __stdcall SystemSwitchOutComplete(unsigned int iShip, unsigned int iClientI
 
 		// event
 		ProcessEvent(L"switchout char=%s id=%d system=%s", 
-				(wchar_t*)Players.GetActiveCharacterName(iClientID), 
+				Players.GetActiveCharacterName(iClientID), 
 				iClientID,
 				HkGetPlayerSystem(iClientID).c_str());
 	} catch(...) { LOG_EXCEPTION }
@@ -2470,6 +2563,72 @@ void __stdcall GFGoodBuy(struct SGFGoodBuyInfo const &gbi, unsigned int iClientI
 {
 	ISERVER_LOG();
 	ISERVER_LOGARG_UI(iClientID);
+	//Cargo Pod
+	list<CARGO_INFO> lstCargo;
+	int counter=0;
+	float fRemHold;
+	HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
+	pub::Player::GetRemainingHoldSize(iClientID, fRemHold);
+	int iRem=(int)fRemHold;
+	CAccount *acc = Players.FindAccountFromClientID(iClientID);
+	wstring wscDir;
+	HkGetAccountDirName(acc, wscDir);
+	string scUserStore = scAcctPath + wstos(wscDir) + "\\flhookuser.ini";
+	wstring wscFilename;
+	HkGetCharFileName(ARG_CLIENTID(iClientID), wscFilename);
+	IniDelSection(scUserStore,"pods_" + wstos(wscFilename));
+	foreach(lstCargo, CARGO_INFO, cargo)
+	{
+		const GoodInfo *gi = GoodList::find_by_id(cargo->iArchID);
+		if(!gi)
+		   continue;
+		if(cargo->bMounted && gi->iIDS)
+		{
+			CARGO_POD FindPod = CARGO_POD(cargo->iArchID, 0);
+	        CARGO_POD *pod = set_btCargoPod->Find(&FindPod);
+			if(cargo->iID && pod)
+			{
+				ClientInfo[iClientID].isPod=true;
+		        string scSection = utos(cargo->iID) + "_" + wstos(wscFilename);
+				IniWrite(scUserStore, "pods_" + wstos(wscFilename),itos(cargo->iID),"1");
+				int Capacity=0;
+				list<INISECTIONVALUE> goods;
+				goods.clear();
+				IniGetSection(scUserStore, scSection, goods);
+				foreach(goods,INISECTIONVALUE,lst)
+				{
+					Capacity+=ToInt(stows(lst->scValue).c_str());
+				}
+				if(Capacity<pod->capacity)
+				{
+					list<CARGO_INFO> lstCargoNew;
+	                HkEnumCargo(ARG_CLIENTID(iClientID), lstCargoNew, 0);
+					foreach(lstCargoNew, CARGO_INFO, cargo)
+					{   
+						const GoodInfo *gi = GoodList::find_by_id(cargo->iArchID);
+		                if(!gi)
+		                   continue;
+						Archetype::Equipment *eq = Archetype::GetEquipment(cargo->iArchID);
+						if(!cargo->bMounted && gi->iIDS && gi->type == 0)
+						{
+							if(cargo->iCount > pod->capacity-Capacity)
+							{
+								int iGoods = IniGetI(scUserStore, scSection,utos(cargo->iArchID),0);
+                                IniWrite(scUserStore, scSection, utos(cargo->iArchID), itos(pod->capacity-Capacity+iGoods));
+				                HkRemoveCargo(ARG_CLIENTID(iClientID), cargo->iID, pod->capacity-Capacity);
+							}
+							else
+							{
+								int iGoods = IniGetI(scUserStore, scSection,utos(cargo->iArchID),0);
+								IniWrite(scUserStore, scSection, utos(cargo->iArchID), itos(cargo->iCount+iGoods));
+				                HkRemoveCargo(ARG_CLIENTID(iClientID), cargo->iID, cargo->iCount);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	Server.GFGoodBuy(gbi, iClientID);
 }
@@ -2875,6 +3034,15 @@ void __stdcall ReqRemoveItem(unsigned short p1, int p2, unsigned int iClientID)
 	ISERVER_LOGARG_UI(p1);
 	ISERVER_LOGARG_I(p2);
 	ISERVER_LOGARG_UI(iClientID);
+	//Cargo Pods
+	CAccount *acc = Players.FindAccountFromClientID(iClientID);
+	wstring wscDir;
+	HkGetAccountDirName(acc, wscDir);
+	string scUserFile = scAcctPath + wstos(wscDir) + "\\flhookuser.ini";
+	wstring wscFilename;
+	HkGetCharFileName(ARG_CLIENTID(iClientID), wscFilename);
+	string scSection = utos(p1) + "_" + wstos(wscFilename);
+	IniDelSection(scUserFile,scSection);
 
 	Server.ReqRemoveItem(p1, p2, iClientID);
 }
@@ -3128,6 +3296,54 @@ void __stdcall SPScanCargo(unsigned int const &p1, unsigned int const &p2, unsig
 	ISERVER_LOGARG_UI(p1);
 	ISERVER_LOGARG_UI(p2);
 	ISERVER_LOGARG_UI(p3);
+		uint iClientID = HkGetClientIDByShip(p2);
+		if(iClientID && ClientInfo[iClientID].isPod)
+		{
+		    list<CARGO_INFO> lstCargo;
+//	        int iRem;
+	        HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
+	        foreach(lstCargo, CARGO_INFO, it)
+	        {
+		        const GoodInfo *gi = GoodList::find_by_id(it->iArchID);
+		        if(!gi)
+		            continue;
+		        if(it->bMounted && gi->iIDS)
+		        {
+			        CARGO_POD FindPod = CARGO_POD(it->iArchID, 0);
+	                CARGO_POD *pod = set_btCargoPod->Find(&FindPod);
+			        if(it->iID && pod)
+			        {
+				        CAccount *acc = Players.FindAccountFromClientID(iClientID);
+	                    wstring wscDir;
+	                    HkGetAccountDirName(acc, wscDir);
+	                    string scUserStore = scAcctPath + wstos(wscDir) + "\\flhookuser.ini";
+	                    wstring wscFilename;
+	                    HkGetCharFileName(ARG_CLIENTID(iClientID), wscFilename);
+	                    string scSection = utos(it->iID) + "_" + wstos(wscFilename);
+				        int counter=0;
+				        list<INISECTIONVALUE> amount;
+				        IniGetSection(scUserStore, scSection, amount);
+				        foreach(amount,INISECTIONVALUE,lstI)
+				        {
+					        counter+=ToInt(stows(lstI->scValue).c_str());
+				        }
+				        PrintUserCmdText(p3,L"[Cargo Pod health = %f]",it->fStatus);
+				        IniDelSection(scUserStore,scSection);
+				        foreach(amount,INISECTIONVALUE,lstgoods)
+				        {
+					        if(ToInt(stows(lstgoods->scValue).c_str())>0)
+					        {
+						        IniWrite(scUserStore, scSection, lstgoods->scKey, lstgoods->scValue);
+					            const GoodInfo *ls = GoodList::find_by_id(ToInt(stows(lstgoods->scKey).c_str()));;
+		                        if(!ls)
+		                            continue;
+					            PrintUserCmdText(p3, L"  %s=%s", HkGetWStringFromIDS(ls->iIDSName).c_str(), stows(lstgoods->scValue).c_str());
+							}
+						}
+					}
+				}
+			}
+		}
 
 	Server.SPScanCargo(p1, p2, p3);
 }

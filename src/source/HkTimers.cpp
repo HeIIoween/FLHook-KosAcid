@@ -740,48 +740,43 @@ try {
         struct PlayerData *pPD = 0;
         while(pPD = Players.traverse_active(pPD))
 		{
+			int timers=0;
             uint iClientID = HkGetClientIdFromPD(pPD);
             uint iShip = 0;
 	        pub::Player::GetShip(iClientID, iShip);
-			uint iShipArchID;
-            pub::Player::GetShipID(iClientID, iShipArchID);
-            UINT_WRAP uw = UINT_WRAP(iShipArchID);
-			if(!iShip)
+			if(!iShip )
 			{
-				ClientInfo[iClientID].tmRegenTime = timeInMS()+1000;
+				return;
 			}
-			if(set_btFighterShipArchIDs->Find(&uw))
+			if(ClientInfo[iClientID].HasArmour)
 			{
-				if(timeInMS() > ClientInfo[iClientID].tmRegenTime)
-				{
-			        list <CARGO_INFO> lstCargo;
-	                HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
-	                foreach(lstCargo, CARGO_INFO, it)
+			    
+			    float maxHealth, curHealth;
+			    pub::SpaceObj::GetHealth(ClientInfo[iClientID].iShip, curHealth, maxHealth);
+			    if(timeInMS() >= ClientInfo[iClientID].tmRegenTime && curHealth < maxHealth)
+			    {
+                    float HullNow, MaxHull;
+                    float Regen;
+                    pub::SpaceObj::GetHealth(iShip , HullNow, MaxHull);
+                    Regen = HullNow / MaxHull;
+					if(ClientInfo[iClientID].Repair)
 					{
-	                    foreach(lstArmour,INISECTIONVALUE,it2)
-						{
-			                uint iArmour = CreateID(it2->scKey.c_str());
-						    if(iArmour==it->iArchID && it->bMounted)
-							{
-                                ClientInfo[iClientID].tmRegenTime = timeInMS()+ToInt(it2->scValue);
-                                float HullNow, MaxHull;
-                                float Regen;
-                                pub::SpaceObj::GetHealth(iShip , HullNow, MaxHull);
-                                Regen = (HullNow / MaxHull);
-                                if (Regen<=0.9f)
-								{
-									pub::SpaceObj::SetRelativeHealth(iShip, Regen+0.1f); 
-								}
-								else
-								{
-									pub::SpaceObj::SetRelativeHealth(iShip, 1.0f);
-								}
-							}
-						}
+                        if (Regen<=0.9f)
+					    {
+						    pub::SpaceObj::SetRelativeHealth(iShip, Regen+0.1f); 
+					    }
+					    else
+					    {
+						    pub::SpaceObj::SetRelativeHealth(iShip, 1.0f);
+						    ClientInfo[iClientID].Repair = false;
+							return;
+					    }
 					}
+					ClientInfo[iClientID].Repair = true;
+					ClientInfo[iClientID].tmRegenTime = timeInMS() + ClientInfo[iClientID].mTime;
 				}
 			}
-		}
+	     }
 }catch(...) { AddLog("Exception in %s", __FUNCTION__);}}
 
 void HkServerRestart()
@@ -834,6 +829,81 @@ void HkServerRestart()
    }
    catch(...) 
    { AddLog("Exception in %s", __FUNCTION__);}
+}
+
+//Cargo Pods
+void GoodsTranfer()
+{
+	struct PlayerData *pPD = 0;
+	while(pPD = Players.traverse_active(pPD))
+	{
+		uint iClientID = HkGetClientIdFromPD(pPD);
+		if(ClientInfo[iClientID].bHold)
+		{
+	        list<CARGO_INFO> lstCargo;
+	        lstCargo.clear();
+			float fRemHold;
+	        HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
+			pub::Player::GetRemainingHoldSize(iClientID, fRemHold);
+			int iRem=(int)fRemHold;
+		    foreach(lstCargo, CARGO_INFO, cargo)
+	        {
+		        const GoodInfo *gi = GoodList::find_by_id(cargo->iArchID);
+		        if(!gi)
+		           continue;
+		        if(cargo->bMounted && gi->iIDS)
+		        {
+			        CARGO_POD FindPod = CARGO_POD(cargo->iArchID, 0);
+	                CARGO_POD *pod = set_btCargoPod->Find(&FindPod);
+				    if(cargo->iID && pod && ClientInfo[iClientID].bHold)
+				    {
+					    CAccount *acc = Players.FindAccountFromClientID(iClientID);
+	                    wstring wscDir;
+	                    HkGetAccountDirName(acc, wscDir);
+	                    string scUserStore = scAcctPath + wstos(wscDir) + "\\flhookuser.ini";
+		                wstring wscFilename;
+		                HkGetCharFileName(ARG_CLIENTID(iClientID), wscFilename);
+		                string scSection = utos(cargo->iID) + "_" + wstos(wscFilename);
+					    list<INISECTIONVALUE> goods;
+					    goods.clear();
+					    IniGetSection(scUserStore, scSection, goods);
+					    IniDelSection(scUserStore,scSection);
+					    uint iMission=0;
+					    foreach(goods,INISECTIONVALUE,lst)
+					    {
+						    int iGoods=0;
+	                        list<CARGO_INFO> lstCargo;
+							float fRemHold;
+	                        HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
+							pub::Player::GetRemainingHoldSize(iClientID, fRemHold);
+							int iRem=(int)fRemHold;
+						    Archetype::Equipment *eq = Archetype::GetEquipment(ToInt(stows(lst->scKey).c_str()));
+						    int GoodCounter = ToInt(stows(lst->scValue).c_str());
+						    if(iRem<eq->fVolume*GoodCounter)
+						    {
+							    iGoods=iRem/(int)eq->fVolume;
+						    }
+						    else
+						    {
+							    iGoods=GoodCounter;
+						    }
+						    if(iGoods>0 && ClientInfo[iClientID].bHold)
+						    {
+								pub::Player::AddCargo(iClientID, ToInt(stows(lst->scKey.c_str())), iGoods, 1, false);
+								IniWrite(scUserStore, scSection, lst->scKey, itos(GoodCounter-iGoods));
+								ClientInfo[iClientID].bHold=false;
+						    }
+							else if(GoodCounter>0)
+							{
+								IniWrite(scUserStore, scSection, lst->scKey, lst->scValue);
+							}
+					    }
+				    }
+			    }
+		    }
+		    ClientInfo[iClientID].bHold=false;
+	    }
+	}
 }
 
 /**************************************************************************************************************

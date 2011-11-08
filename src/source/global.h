@@ -503,6 +503,7 @@ extern BinaryTree<UINT_WRAP> *set_btFreighterShipArchIDs;
 extern BinaryTree<UINT_WRAP> *set_btFighterShipArchIDs;
 //Armour
 extern list<INISECTIONVALUE> lstArmour;
+extern list<INISECTIONVALUE> lstClass;
 extern bool FullLog;
 //ranks
 extern list<INISECTIONVALUE> lstRanks;
@@ -538,4 +539,17 @@ extern list<INISECTIONVALUE> lstHelpHide;
 extern list<INISECTIONVALUE> lstServerRestart;
 //FLHash
 extern list<INISECTIONVALUE> lstFLPaths;
+//Cargo Pods
+struct CARGO_POD
+{
+	CARGO_POD(uint p, int c) { capacity = c; CargoPodID = p; }
+	int	capacity;
+	uint	CargoPodID;
+	bool operator==(CARGO_POD pd) { return pd.CargoPodID==CargoPodID; }
+	bool operator>=(CARGO_POD pd) { return pd.CargoPodID>=CargoPodID; }
+	bool operator<=(CARGO_POD pd) { return pd.CargoPodID<=CargoPodID; }
+	bool operator>(CARGO_POD pd) { return pd.CargoPodID>CargoPodID; }
+	bool operator<(CARGO_POD pd) { return pd.CargoPodID<CargoPodID; }
+};
+extern BinaryTree<CARGO_POD> *set_btCargoPod;
 #endif

@@ -1,5 +1,5 @@
 #include "hook.h"
-#pragma warning(disable:4996)
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void HkHandleCheater(uint iClientID, bool bBan, wstring wscReason, ...)
@@ -10,10 +10,10 @@ void HkHandleCheater(uint iClientID, bool bBan, wstring wscReason, ...)
 
 	_vsnwprintf(wszBuf, (sizeof(wszBuf) / 2) - 1, wscReason.c_str(), marker);
 
-	if(!(wchar_t*)Players.GetActiveCharacterName(iClientID))
+	if(!Players.GetActiveCharacterName(iClientID))
 		return;
 
-	wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 	HkAddCheaterLog(wscCharname, wszBuf);
 
 	wchar_t wszBuf2[256];
@@ -59,7 +59,7 @@ bool HkAddKickLog(uint iClientID, wstring wscReason, ...)
 	if(!f)
 		return false;
 
-	const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientID);
 	if(!wszCharname)
 		wszCharname = L"";
 
@@ -83,7 +83,7 @@ bool HkAddConnectLog(uint iClientID)
 	if(!f)
 		return false;
 
-	const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientID);
 	if(!wszCharname)
 		wszCharname = L"";
 
@@ -105,7 +105,7 @@ bool HkAddChatLogSpeed(uint iClientID, wstring wscMessage)
 	FILE *f = fopen((scAcctPath + "speedhack" + itos(stNow->tm_mon + 1) + "_" + itos(stNow->tm_mday) + "_" + itos(stNow->tm_year + 1900) + ".log").c_str(), "at");
 	if(!f)
 	return false;
-	wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 	CAccount *acc = HkGetAccountByCharname(wscCharname);
 	wstring wscAccountDir;
 	HkGetAccountDirName(acc, wscAccountDir);
@@ -121,7 +121,7 @@ bool HkAddChatLogProc(uint iClientID, wstring wscMessage)
 	FILE *f = fopen((scAcctPath + "process" + itos(stNow->tm_mon + 1) + "_" + itos(stNow->tm_mday) + "_" + itos(stNow->tm_year + 1900) + ".log").c_str(), "at");
 	if(!f)
 	return false;
-	wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 	CAccount *acc = HkGetAccountByCharname(wscCharname);
 	wstring wscAccountDir;
 	HkGetAccountDirName(acc, wscAccountDir);
@@ -137,7 +137,7 @@ bool HkAddChatLogATProc(uint iClientID, wstring wscMessage)
 	FILE *f = fopen((scAcctPath + "atprocess" + itos(stNow->tm_mon + 1) + "_" + itos(stNow->tm_mday) + "_" + itos(stNow->tm_year + 1900) + ".log").c_str(), "at");
 	if(!f)
 	return false;
-	wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 	CAccount *acc = HkGetAccountByCharname(wscCharname);
 	wstring wscAccountDir;
 	HkGetAccountDirName(acc, wscAccountDir);
@@ -153,7 +153,7 @@ bool HkAddChatLogCRC(uint iClientID, wstring wscMessage)
 	FILE *f = fopen((scAcctPath + "crccheats" + itos(stNow->tm_mon + 1) + "_" + itos(stNow->tm_mday) + "_" + itos(stNow->tm_year + 1900) + ".log").c_str(), "at");
 	if(!f)
 	return false;
-	wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 	CAccount *acc = HkGetAccountByCharname(wscCharname);
 	wstring wscAccountDir;
 	HkGetAccountDirName(acc, wscAccountDir);
@@ -169,7 +169,7 @@ bool HkAddChatLogSystem(uint iClientID, wstring wscMessage)
 	FILE *f = fopen((scAcctPath + "chat_" + itos(stNow->tm_mon + 1) + "_" + itos(stNow->tm_mday) + "_" + itos(stNow->tm_year + 1900) + ".log").c_str(), "at");
 	if(!f)
 	return false;
-    wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+    wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 	CAccount *acc = HkGetAccountByCharname(wscCharname);
 	wstring wscAccountDir;
 	HkGetAccountDirName(acc, wscAccountDir);
@@ -185,7 +185,7 @@ bool HkAddChatLogGroup(uint iClientID, wstring wscMessage)
 	FILE *f = fopen((scAcctPath + "group_" + itos(stNow->tm_mon + 1) + "_" + itos(stNow->tm_mday) + "_" + itos(stNow->tm_year + 1900) + ".log").c_str(), "at");
 	if(!f)
 	return false;
-    wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+    wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 	CAccount *acc = HkGetAccountByCharname(wscCharname);
 	wstring wscAccountDir;
 	HkGetAccountDirName(acc, wscAccountDir);
@@ -213,8 +213,8 @@ bool HkAddChatLogKill(uint iClientIDVictim, uint iClientIDKiller)
 {
 	if(!iClientIDKiller)
 		return true;
-	wstring wscVictim = (wchar_t*)Players.GetActiveCharacterName(iClientIDVictim);
-	wstring wscKiller = (wchar_t*)Players.GetActiveCharacterName(iClientIDKiller);
+	wstring wscVictim = Players.GetActiveCharacterName(iClientIDVictim);
+	wstring wscKiller = Players.GetActiveCharacterName(iClientIDKiller);
 	wstring wscSystem = HkGetPlayerSystem(iClientIDVictim);
 	wstring wscDeathship = HkGetWStringFromIDS(Archetype::GetShip(Players[iClientIDVictim].iShipArchID)->iIDSName);
 	wstring wscKillship = HkGetWStringFromIDS(Archetype::GetShip(Players[iClientIDKiller].iShipArchID)->iIDSName);

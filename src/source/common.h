@@ -51,7 +51,7 @@ public:
 
 class IMPORT BinaryRDLReader
 {
-	unsigned char szBuf[1024];
+	char szBuf[1024];
 
 public:
 	BinaryRDLReader(class BinaryRDLReader const &);
@@ -844,8 +844,17 @@ struct GoodInfo
 	uint ArchID;
 	uint type; // == 0 when commodity
 	uint i3; //hash/CRC thing
-	float iDunno2[13];
+	uint iShipGoodID; // if type = GOODINFO_TYPE_HULL
+	float fPrice;
+	float fGoodSellPrice;
+	float fBadBuyPrice;
+	float fBadSellPrice;
+	float fGoodBuyPrice;
+	uint iJumpDist;
+	float iDunno2[6];
+	uint iIDSName;
 	uint iIDS;
+	uint iHullGoodID; // if type = GOODINFO_TYPE_SHIP
 };
 
 namespace GoodList 
@@ -1202,7 +1211,7 @@ public:
 
 class IMPORT INI_Reader
 {
-	char szBuf[1024*8];
+	char szBuf[1024];
 
 public:
 	INI_Reader(class INI_Reader const &);

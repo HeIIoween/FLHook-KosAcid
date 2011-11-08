@@ -3,7 +3,6 @@
 #include "hook.h"
 #include "CConsole.h"
 #include "CSocket.h"
-#pragma warning(disable:4996)
 
 // structs
 struct SOCKET_CONNECTION
@@ -835,7 +834,11 @@ void DoHashList()
 						{
 
 							string temp = Trim(GetParam(line, '=', 1));
-							fprintf(fr,"%u = %s\n",pGetBuf(temp.c_str(), temp.length()),temp.c_str());
+							uint ids = pGetBuf(temp.c_str(), temp.length());
+							const GoodInfo *gp = GoodList::find_by_id(ids);
+							if(!gp)
+		                    continue;
+							fprintf(fr,"%u = %s = %s\n",ids,temp.c_str(),HkGetStringFromIDS(gp->iIDS).c_str());
 						}	
 					}
 					readhash.close();
@@ -863,7 +866,8 @@ void DoHashList()
 									    if(uinline.find("nickname")==0)
 										{
 										    string temp = Trim(GetParam(uinline, '=', 1));
-							                fprintf(fr,"%u = %s\n",pGetBuf(temp.c_str(), temp.length()),temp.c_str());
+											uint ids = pGetBuf(temp.c_str(), temp.length());
+							                fprintf(fr,"%u = %s\n",ids,temp.c_str());
 										}
 									}
 								}

@@ -1,6 +1,5 @@
 #include "hook.h"
 #include "CInGame.h"
-#pragma warning(disable:4996)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -839,7 +838,7 @@ HK_ERROR HkRename(wstring wscCharname, wstring wscNewCharname, bool bOnlyDelete)
 	wstring wscOldCharname;
 	if(iClientID != -1) {
 		acc = Players.FindAccountFromClientID(iClientID);
-		wscOldCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+		wscOldCharname = Players.GetActiveCharacterName(iClientID);
 	} else {
 		wscOldCharname = wscCharname;
 		acc = HkGetAccountByCharname(wscCharname);
@@ -1687,7 +1686,7 @@ HK_ERROR HkGetGroupMembers(wstring wscCharname, list<GROUP_MEMBER> &lstMembers)
 	{
 		GROUP_MEMBER gm;
 		gm.iClientID = vMembers[i];
-		gm.wscCharname = (wchar_t*)Players.GetActiveCharacterName(vMembers[i]);
+		gm.wscCharname = Players.GetActiveCharacterName(vMembers[i]);
 		lstMembers.push_back(gm);
 	}
 
@@ -1729,7 +1728,7 @@ HK_ERROR HkInviteToGroup(wstring wscCharname, wstring wscCharFrom)
 {
 	HK_GET_CLIENTID(iClientID, wscCharFrom);
 	HK_GET_CLIENTID2(iClientIDTarget, wscCharname);
-	wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientIDTarget);
+	wscCharname = Players.GetActiveCharacterName(iClientIDTarget);
 
 	// check if logged in
 	if(iClientIDTarget == -1 || iClientID == -1)
@@ -1792,7 +1791,7 @@ HK_ERROR HkReadCharFile(wstring wscCharname, list<wstring> &lstOutput)
 	CAccount *acc;
 	if(iClientID != -1) {
 		acc = Players.FindAccountFromClientID(iClientID);
-		const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+		const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientID);
 		if(!wszCharname)
 			return HKE_NO_CHAR_SELECTED;
 
@@ -1844,7 +1843,7 @@ HK_ERROR HkWriteCharFile(wstring wscCharname, wstring wscData)
 	CAccount *acc;
 	if(iClientID != -1) {
 		acc = Players.FindAccountFromClientID(iClientID);
-		const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+		const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientID);
 		if(!wszCharname)
 			return HKE_NO_CHAR_SELECTED;
 
@@ -1965,7 +1964,7 @@ HK_ERROR HkInitCloakSettings(uint iClientID)
 {
 	ClientInfo[iClientID].bCanCloak = false;
 
-	wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 
     list<CARGO_INFO> lstEquipment;
 	if (HKHKSUCCESS(HkEnumCargo(wscCharname,lstEquipment,0)))
@@ -2439,7 +2438,7 @@ HK_ERROR HkInitFTLFuel(uint iClientID)
 //Reps
 HK_ERROR HkRepSet(uint iClientID)
 {
-    string wscstr = ToLower(wstos((wchar_t*)Players.GetActiveCharacterName(iClientID)));
+    string wscstr = ToLower(wstos(Players.GetActiveCharacterName(iClientID)));
 	bool msg=true;
 	bool setrep=false;
     foreach(lstReps,INISECTIONVALUE,repset)
@@ -2501,7 +2500,7 @@ return HKE_OK;
 
 HK_ERROR HkPlayerFileLineR(uint iClientID, wstring wscMessage)
 {
-	wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 	wstring wsNameKey=GetParam(wscMessage, ' ', 0);
 	wstring wsValue=GetParam(wscMessage, ' ', 1);
     list<wstring> lstCharFile;
@@ -2549,7 +2548,7 @@ HK_ERROR HkPlayerRestart(uint iClientID, wstring wscMessage)
 	}
     bool equipw = true;
 	bool basew =true;
-	wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	wstring wscCharname = Players.GetActiveCharacterName(iClientID);
     list<wstring> lstCharFile;
 	HK_ERROR err = HkReadCharFile(wscCharname, lstCharFile);
 	if(!HKHKSUCCESS(err))
@@ -2658,7 +2657,7 @@ HK_ERROR HkPlayerUpdate(uint iClientID)
 {
 	if(set_AutoUpdateEnabled)
 	{
-	    wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+	    wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 	    foreach(lstUpdates,INISECTIONVALUE,path)
 		{
 		    wchar_t wszBufUpdate[1024];

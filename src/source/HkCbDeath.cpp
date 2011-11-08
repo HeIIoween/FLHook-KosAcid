@@ -1,5 +1,4 @@
 #include "hook.h"
-#pragma warning(disable:4996)
 
 wstring wscAdminKiller = L"";
 map<uint, list<DAMAGE_INFO> > mapSpaceObjDmgRec;
@@ -420,6 +419,34 @@ void __stdcall ShipDestroyed(DamageList *_dmg, char *szECX, uint iKill)
 		memcpy(&szP, szECX + 0x10, 4);
 		uint iClientID;
 		memcpy(&iClientID, szP + 0xB4, 4);
+		//Cargo Pod
+		if(ClientInfo[iClientID].isPod)
+		{
+		    list<CARGO_INFO> lstCargo;
+	        HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
+		    foreach(lstCargo, CARGO_INFO, cargo)
+			{
+		        const GoodInfo *gi = GoodList::find_by_id(cargo->iArchID);
+		        if(!gi)
+		           continue;
+		        if(cargo->bMounted && gi->iIDS)
+				{
+			        CARGO_POD FindPod = CARGO_POD(cargo->iArchID, 0);
+	                CARGO_POD *pod = set_btCargoPod->Find(&FindPod);
+				    if(cargo->iID && pod)
+					{
+					    CAccount *acc = Players.FindAccountFromClientID(iClientID);
+	                    wstring wscDir;
+	                    HkGetAccountDirName(acc, wscDir);
+	                    string scUserStore = scAcctPath + wstos(wscDir) + "\\flhookuser.ini";
+		                wstring wscFilename;
+		                HkGetCharFileName(ARG_CLIENTID(iClientID), wscFilename);
+		                string scSection = utos(cargo->iID) + "_" + wstos(wscFilename);
+					    IniDelSection(scUserStore,scSection);
+					}
+				}
+			}
+		}
 
 		if(iKill)
 		{
@@ -472,7 +499,7 @@ void __stdcall ShipDestroyed(DamageList *_dmg, char *szECX, uint iKill)
 						wstring wscEvent, wscEventBy = L" by=", wscEventCause = L" cause=";
 						wscEvent.reserve(256);
 						wscDeathMsg.reserve(256);
-						wstring wscVictim = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+						wstring wscVictim = Players.GetActiveCharacterName(iClientID);
 						wscEvent = L"kill victim=" + wscVictim;
 						wscDeathMsg = wscVictim + L" was killed";
 						if(!lstFactionsInflict.size())
@@ -581,13 +608,13 @@ void __stdcall ShipDestroyed(DamageList *_dmg, char *szECX, uint iKill)
 									if(j == 0)
 									{
 										iKillerID = -lstFactionsInflict.back().iInflictor;
-										wstring wscKiller = (wchar_t*)Players.GetActiveCharacterName(iKillerID);
+										wstring wscKiller = Players.GetActiveCharacterName(iKillerID);
 										lstCauses.push_back(L"by " + wscKiller + (wscDamages.length() ? (L" with " + wscDamages) : L""));
 										wscEventBy += wscKiller;
 									}
 									else
 									{
-										wstring wscKiller = (wchar_t*)Players.GetActiveCharacterName(-lstFactionsInflict.back().iInflictor);
+										wstring wscKiller = Players.GetActiveCharacterName(-lstFactionsInflict.back().iInflictor);
 										lstCauses.push_back(L"by " + wscKiller + (wscDamages.length() ? (L" with " + wscDamages) : L""));
 										wscEventBy += L"," + wscKiller;
 									}
@@ -697,7 +724,7 @@ void __stdcall ShipDestroyed(DamageList *_dmg, char *szECX, uint iKill)
 							// MultiKillMessages
 							if((set_MKM_bActivated) && iKillerID && (iClientID != iKillerID))
 							{
-								wstring wscKiller = (wchar_t*)Players.GetActiveCharacterName(iKillerID);
+								wstring wscKiller = Players.GetActiveCharacterName(iKillerID);
 
 								ClientInfo[iKillerID].iKillsInARow++;
 								foreach(set_MKM_lstMessages, MULTIKILLMESSAGE, it)
@@ -753,7 +780,7 @@ void __stdcall ShipDestroyed(DamageList *_dmg, char *szECX, uint iKill)
 						{
 							uint iSystemID;
 							pub::Player::GetSystem(iClientID, iSystemID);
-							SendDeathMsg(L"Death: " + wstring((wchar_t*)Players.GetActiveCharacterName(iClientID)) + L" was vaporized by " + wscAdminKiller + L"'s .kill fury", iSystemID, iClientID, 0);
+							SendDeathMsg(L"Death: " + wstring(Players.GetActiveCharacterName(iClientID)) + L" was vaporized by " + wscAdminKiller + L"'s .kill fury", iSystemID, iClientID, 0);
 							wscAdminKiller = L"";
 						}
 					}
@@ -764,7 +791,7 @@ void __stdcall ShipDestroyed(DamageList *_dmg, char *szECX, uint iKill)
 
 					uint iSystemID;
 					pub::Player::GetSystem(iClientID, iSystemID);
-					SendDeathMsg(L"Death: " + wstring((wchar_t*)Players.GetActiveCharacterName(iClientID)) + L" was killed", iSystemID, iClientID, 0);
+					SendDeathMsg(L"Death: " + wstring(Players.GetActiveCharacterName(iClientID)) + L" was killed", iSystemID, iClientID, 0);
 					AddLog("Exception while formulating death message"); AddExceptionInfoLog();
 				}
 			}
@@ -1046,7 +1073,7 @@ void SpaceObjDestroyed(uint iObject, bool bSolar)
 						uint iTempClientID = -lstFactionsInflict.back().iInflictor;
 						if(j == 0)
 							iKillerID = iTempClientID;
-						lstCauses.push_back(L"by " + wstring((wchar_t*)Players.GetActiveCharacterName(iTempClientID)) + (wscDamages.length() ? (L" with " + wscDamages) : L""));
+						lstCauses.push_back(L"by " + wstring(Players.GetActiveCharacterName(iTempClientID)) + (wscDamages.length() ? (L" with " + wscDamages) : L""));
 					}
 					else //NPC
 					{

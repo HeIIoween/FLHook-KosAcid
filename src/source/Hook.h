@@ -88,7 +88,7 @@
 		} \
 		else \
 		{ \
-			if(ToLower((wchar_t*)Players.GetActiveCharacterName(a)).find(admin.wscCharRestrict) == -1) \
+			if(ToLower(Players.GetActiveCharacterName(a)).find(admin.wscCharRestrict) == -1) \
 				return HKE_NAME_NOT_MATCH_RESTRICTION; \
 		} \
 	} \
@@ -132,7 +132,7 @@
 		} \
 		else \
 		{ \
-			if(ToLower((wchar_t*)Players.GetActiveCharacterName(a)).find(admin.wscCharRestrict) == -1) \
+			if(ToLower(Players.GetActiveCharacterName(a)).find(admin.wscCharRestrict) == -1) \
 				return HKE_NAME_NOT_MATCH_RESTRICTION; \
 		} \
 	} \
@@ -330,6 +330,7 @@ struct CARGO_INFO
 	uint	iID;
 	int		iCount;
 	uint	iArchID;
+	float	fStatus;
 	bool	bMission;
 	bool	bMounted;
 };
@@ -548,6 +549,12 @@ struct CLIENT_INFO
     mstime AntiCheatT;
 //Armour
 	mstime tmRegenTime;
+	bool HasArmour;
+	bool Repair;
+	int mTime;
+//Cargo Pods
+	bool isPod;
+	bool bHold;
 };
 
 // taken from directplay
@@ -939,7 +946,10 @@ struct MOB_UNDOCKBASEKILL
 	bool bKill;
 };
 extern list<MOB_UNDOCKBASEKILL> lstUndockKill;
-
+//Cargo Pod
+extern bool PlayerHit;
+extern uint iClientIDTargetPod;
+extern uint iClientIDKillerPod;
 // HkCbCallbacks
 void _SendMessageHook();
 void __stdcall HkCb_SendChat(uint iId, uint iTo, uint iSize, void *pRDL);
@@ -981,6 +991,8 @@ void BhTimeOutCheck();
 void BhKillCheck(uint uiClientID, uint uiKillerID);
 //ServerRestart
 void HkServerRestart();
+//Cargo Pods
+void GoodsTranfer();
 
 extern list<BASE_INFO> lstBases;
 extern CRITICAL_SECTION csIPResolve;

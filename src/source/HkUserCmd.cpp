@@ -1,5 +1,4 @@
 #include "hook.h"
-#pragma warning(disable:4996)
 
 #define PRINT_ERROR() { for(uint i = 0; (i < sizeof(wscError)/sizeof(wstring)); i++) PrintUserCmdText(iClientID, wscError[i]); return; }
 #define PRINT_ERROR_NORETURN() { for(uint i = 0; (i < sizeof(wscError)/sizeof(wstring)); i++) PrintUserCmdText(iClientID, wscError[i]); }
@@ -303,7 +302,7 @@ void UserCmd_IgnoreID(uint iClientID, wstring wscParam)
 		return;
 	}
 
-	wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientIDTarget);
+	wstring wscCharname = Players.GetActiveCharacterName(iClientIDTarget);
 
 	// save to ini
 	GET_USERFILE(scUserFile);
@@ -580,7 +579,7 @@ void UserCmd_InviteAll(uint iClientID, wstring wscParam)
 		{
 			uint iClientIDinvite = HkGetClientIdFromPD(pPD);
 
-			const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientIDinvite);
+			const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientIDinvite);
 			if(!wszCharname)
 				continue;
 
@@ -611,7 +610,7 @@ void UserCmd_InviteAll(uint iClientID, wstring wscParam)
 		{
 			uint iClientIDinvite = HkGetClientIdFromPD(pPD);
 
-			const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientIDinvite);
+			const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientIDinvite);
 			if(!wszCharname)
 				continue;
 
@@ -715,7 +714,7 @@ void UserCmd_Rename(uint iClientID, wstring wscParam)
 		return;
 	}
 	
-	wstring wscCharName = ((wchar_t*)Players.GetActiveCharacterName(iClientID));
+	wstring wscCharName = (Players.GetActiveCharacterName(iClientID));
 	int cashAmount=0;
 	HkGetCash(ARG_CLIENTID(iClientID), cashAmount);
 	if(cashAmount>=set_iRenameCmdCharge)
@@ -796,7 +795,7 @@ void UserCmd_SendCash(uint iClientID, wstring wscParam)
 	}
 	else
 	{
-		wstring wscCharName = ((wchar_t*)Players.GetActiveCharacterName(iClientID));
+		wstring wscCharName = (Players.GetActiveCharacterName(iClientID));
 		int amount = ToInt(amountS);
 		if(amount<=0)
 		{
@@ -885,7 +884,7 @@ void UserCmd_SendCashID(uint iClientID, wstring wscParam)
 	}
 	else
 	{
-		wstring wscCharName = ((wchar_t*)Players.GetActiveCharacterName(iClientID));
+		wstring wscCharName = (Players.GetActiveCharacterName(iClientID));
 		int amount = ToInt(amountS);
 		if(amount<=0)
 		{
@@ -897,7 +896,7 @@ void UserCmd_SendCashID(uint iClientID, wstring wscParam)
 			PrintUserCmdText(iClientID, L"Error: Invalid client-id specified.");
 			return;
 		}
-		targetChar = ((wchar_t*)Players.GetActiveCharacterName(ToInt(targetChar)));
+		targetChar = (Players.GetActiveCharacterName(ToInt(targetChar)));
 		int availCash = 0;
 		HK_ERROR cashError = HkGetCash(ARG_CLIENTID(iClientID), availCash);
 		if(!HKHKSUCCESS(cashError))
@@ -1397,7 +1396,7 @@ void UserCmd_Transfer(uint iClientID, wstring wscParam)
 								HkRemoveCargo(ARG_CLIENTID(iClientID), cargo->iID, 1);
 								HkAddCash(ARG_CLIENTID(iClientID), -set_iTransferCmdCharge);
 								PRINT_OK();
-								PrintUserCmdText(wscTargetChar, L"You have received " + wstring(wscCargo[0]==L'A' || wscCargo[0]==L'E' || wscCargo[0]==L'I' || wscCargo[0]==L'O' || wscCargo[0]==L'U' ? L"an " : L"a ") + wscCargo + L" from " + (wchar_t*)Players.GetActiveCharacterName(iClientID) + L".");
+								PrintUserCmdText(wscTargetChar, L"You have received " + wstring(wscCargo[0]==L'A' || wscCargo[0]==L'E' || wscCargo[0]==L'I' || wscCargo[0]==L'O' || wscCargo[0]==L'U' ? L"an " : L"a ") + wscCargo + L" from " + Players.GetActiveCharacterName(iClientID) + L".");
 								break;
 							case HKE_CHAR_DOES_NOT_EXIST:
 								PrintUserCmdText(iClientID, L"Error: specified character does not exist");
@@ -1447,7 +1446,7 @@ void UserCmd_Transfer(uint iClientID, wstring wscParam)
 									HkRemoveCargo(ARG_CLIENTID(iClientID), cargo->iID, 1);
 									HkAddCash(ARG_CLIENTID(iClientID), -set_iTransferCmdCharge);
 									PRINT_OK();
-									PrintUserCmdText(wscTargetChar, L"You have received " + wstring(wscCargo[0]==L'A' || wscCargo[0]==L'E' || wscCargo[0]==L'I' || wscCargo[0]==L'O' || wscCargo[0]==L'U' ? L"an " : L"a ") + wscCargo + L" from " + (wchar_t*)Players.GetActiveCharacterName(iClientID) + L".");
+									PrintUserCmdText(wscTargetChar, L"You have received " + wstring(wscCargo[0]==L'A' || wscCargo[0]==L'E' || wscCargo[0]==L'I' || wscCargo[0]==L'O' || wscCargo[0]==L'U' ? L"an " : L"a ") + wscCargo + L" from " + Players.GetActiveCharacterName(iClientID) + L".");
 									break;
 								case HKE_CHAR_DOES_NOT_EXIST:
 									PrintUserCmdText(iClientID, L"Error: specified character does not exist");
@@ -1540,7 +1539,7 @@ void UserCmd_TransferID(uint iClientID, wstring wscParam)
 								HkRemoveCargo(ARG_CLIENTID(iClientID), cargo->iID, 1);
 								HkAddCash(ARG_CLIENTID(iClientID), -set_iTransferCmdCharge);
 								PRINT_OK();
-								PrintUserCmdText(iTargetClientID, L"You have received " + wstring(wscCargo[0]==L'A' || wscCargo[0]==L'E' || wscCargo[0]==L'I' || wscCargo[0]==L'O' || wscCargo[0]==L'U' ? L"an " : L"a ") + wscCargo + L" from " + (wchar_t*)Players.GetActiveCharacterName(iClientID) + L".");
+								PrintUserCmdText(iTargetClientID, L"You have received " + wstring(wscCargo[0]==L'A' || wscCargo[0]==L'E' || wscCargo[0]==L'I' || wscCargo[0]==L'O' || wscCargo[0]==L'U' ? L"an " : L"a ") + wscCargo + L" from " + Players.GetActiveCharacterName(iClientID) + L".");
 								break;
 							case HKE_CHAR_DOES_NOT_EXIST:
 								PrintUserCmdText(iClientID, L"Error: specified character does not exist");
@@ -1590,7 +1589,7 @@ void UserCmd_TransferID(uint iClientID, wstring wscParam)
 									HkRemoveCargo(ARG_CLIENTID(iClientID), cargo->iID, 1);
 									HkAddCash(ARG_CLIENTID(iClientID), -set_iTransferCmdCharge);
 									PRINT_OK();
-									PrintUserCmdText(iTargetClientID, L"You have received " + wstring(wscCargo[0]==L'A' || wscCargo[0]==L'E' || wscCargo[0]==L'I' || wscCargo[0]==L'O' || wscCargo[0]==L'U' ? L"an " : L"a ") + wscCargo + L" from " + (wchar_t*)Players.GetActiveCharacterName(iClientID) + L".");
+									PrintUserCmdText(iTargetClientID, L"You have received " + wstring(wscCargo[0]==L'A' || wscCargo[0]==L'E' || wscCargo[0]==L'I' || wscCargo[0]==L'O' || wscCargo[0]==L'U' ? L"an " : L"a ") + wscCargo + L" from " + Players.GetActiveCharacterName(iClientID) + L".");
 									break;
 								case HKE_CHAR_DOES_NOT_EXIST:
 									PrintUserCmdText(iClientID, L"Error: specified character does not exist");
@@ -3047,7 +3046,7 @@ void UserCmd_Kills(uint iClientID, wstring wscParam)
 	int count;
 	if(!wscClientID.length())
 	{
-		wstring wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+		wstring wscCharname = Players.GetActiveCharacterName(iClientID);
 		HkReadCharFile(wscCharname, lstLines);
 		pub::Player::GetNumKills(iClientID, iNumKills);
 		PrintUserCmdText(iClientID, L"number of pvp kills = %i",iNumKills);
@@ -3124,7 +3123,7 @@ void UserCmd_Kills$(uint iClientID, wstring wscParam)
 		PrintUserCmdText(iClientID, L"ERROR player not found");
 		return;
 	}
-	wstring wscClientID = ((wchar_t*)Players.GetActiveCharacterName(iClientIDTarget));
+	wstring wscClientID = (Players.GetActiveCharacterName(iClientIDTarget));
 	HkReadCharFile(wscClientID, lstLines);
 	pub::Player::GetNumKills(iClientIDTarget, iNumKills);
 	PrintUserCmdText(iClientID, L"number of pvp kills = %i",iNumKills);
@@ -3229,7 +3228,7 @@ void UserCmd_BountyHunt(uint iClientID, const wstring wscParam)
 			return;
 		}
 		pub::Player::AdjustCash(iClientID,-uiPrize);
-		wscInitiatior = (wchar_t*)Players.GetActiveCharacterName(iClientID);
+		wscInitiatior = Players.GetActiveCharacterName(iClientID);
 	}
 
 
@@ -3289,7 +3288,7 @@ void UserCmd_BountyHuntId(uint iClientID, const wstring wscParam)
 
 	wstring wscParamNew;
 	wstring wscCharName;
-	wscCharName = ((wchar_t*)Players.GetActiveCharacterName(iClientIDTarget));
+	wscCharName = (Players.GetActiveCharacterName(iClientIDTarget));
 	wscParamNew = wstring(wscCharName + L" "+ wscCredits + L" " +wscTime);
 	UserCmd_BountyHunt(iClientID, wscParamNew);
 }
@@ -3310,7 +3309,7 @@ void UserCmd_Restart(uint iClientID, wstring wscParam)
 		            int iPlayerRep;
 	                pub::Player::GetRep(iClientID, iPlayerRep);
 		            pub::Reputation::SetReputation(iPlayerRep, iRepGroupID, 0.9f);
-					wstring wscCharname = ((wchar_t*)Players.GetActiveCharacterName(iClientID));
+					wstring wscCharname = (Players.GetActiveCharacterName(iClientID));
 					HkSaveChar(wscCharname);
 				}
 	            HkPlayerRestart(iClientID,wscParam);
@@ -3337,7 +3336,7 @@ void UserCmd_List(uint iClientID, wstring wscParam)
 		    PrintUserCmdText(iClientID, L"Error: %s not found", wscParam.c_str());
 		    return;
 		}
-		wstring wscPlayer = ((wchar_t*)Players.GetActiveCharacterName(uiTargetID));
+		wstring wscPlayer = (Players.GetActiveCharacterName(uiTargetID));
 		wstring wscShip = HkGetWStringFromIDS(Archetype::GetShip(Players[uiTargetID].iShipArchID)->iIDSName);
 		wstring Faction;
 		HkGetAffiliation(wscPlayer,Faction);
@@ -3359,7 +3358,7 @@ void UserCmd_List(uint iClientID, wstring wscParam)
 			uint iPlayerID = HkGetClientIdFromPD(pPD);
 			if(ClientInfo[iPlayerID].tmF1TimeDisconnect)
 				continue;
-			wstring wscPlayer = ((wchar_t*)Players.GetActiveCharacterName(iPlayerID));
+			wstring wscPlayer = (Players.GetActiveCharacterName(iPlayerID));
 			wstring wscShip = HkGetWStringFromIDS(Archetype::GetShip(Players[iPlayerID].iShipArchID)->iIDSName);
 			wstring Faction;
 			HkGetAffiliation(wscPlayer,Faction);
@@ -3373,6 +3372,69 @@ void UserCmd_List(uint iClientID, wstring wscParam)
 		        PrintUserCmdText(iClientID, L"%s [%s] %s",wscPlayer.c_str(),L"unknown",wscShip.c_str());
 			}
 		}
+	}
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void UserCmd_Pods(uint iClientID, wstring wscParam)
+{
+	list<CARGO_INFO> lstCargo;
+	HkEnumCargo(ARG_CLIENTID(iClientID), lstCargo, 0);
+	uint iNum = 0;
+	PrintUserCmdText(iClientID,L"[Hold]");
+	foreach(lstCargo, CARGO_INFO, it)
+	{
+		const GoodInfo *gi = GoodList::find_by_id(it->iArchID);
+		if(!gi)
+		continue;
+		if(!it->bMounted && gi->iIDS)
+		{
+			PrintUserCmdText(iClientID, L"  %s=%u", HkGetWStringFromIDS(gi->iIDSName).c_str(), it->iCount);
+			iNum++;
+		}
+	}
+	if(!iNum)
+	PrintUserCmdText(iClientID, L"  you have no goods in your hold");
+	foreach(lstCargo, CARGO_INFO, it)
+	{
+		const GoodInfo *gi = GoodList::find_by_id(it->iArchID);
+		if(!gi)
+		   continue;
+		if(it->bMounted && gi->iIDS)
+		{
+			CARGO_POD FindPod = CARGO_POD(it->iArchID, 0);
+	        CARGO_POD *pod = set_btCargoPod->Find(&FindPod);
+			if(it->iID && pod)
+			{
+				CAccount *acc = Players.FindAccountFromClientID(iClientID);
+	            wstring wscDir;
+	            HkGetAccountDirName(acc, wscDir);
+	            string scUserStore = scAcctPath + wstos(wscDir) + "\\flhookuser.ini";
+	            wstring wscFilename;
+	            HkGetCharFileName(ARG_CLIENTID(iClientID), wscFilename);
+	            string scSection = utos(it->iID) + "_" + wstos(wscFilename);
+				int counter=0;
+				list<INISECTIONVALUE> amount;
+				amount.clear();
+				IniGetSection(scUserStore, scSection, amount);
+				foreach(amount,INISECTIONVALUE,lstI)
+				{
+					counter+=ToInt(stows(lstI->scValue).c_str());
+				}
+				PrintUserCmdText(iClientID,L"[Cargo Pod = %s capacity left = %i health = %f]",HkGetWStringFromIDS(gi->iIDSName).c_str(),pod->capacity-counter,it->fStatus);
+				IniDelSection(scUserStore,scSection);
+				foreach(amount,INISECTIONVALUE,lstgoods)
+				{
+					if(ToInt(stows(lstgoods->scValue).c_str())>0)
+					{
+						IniWrite(scUserStore, scSection, lstgoods->scKey, lstgoods->scValue);
+					    const GoodInfo *ls = GoodList::find_by_id(ToInt(stows(lstgoods->scKey).c_str()));;
+		                if(!ls)
+		                   continue;
+					    PrintUserCmdText(iClientID, L"  %s=%s", HkGetWStringFromIDS(ls->iIDSName).c_str(), stows(lstgoods->scValue).c_str());
+					}
+				}
+			}
+		}      
 	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3466,6 +3528,7 @@ CMDHELPINFO HelpInfo[] =
 	{ true, L"restart",		    L"Usage: /restart <faction> rember you will lose the current ship you have allso all cargo and equipment and given the default ship off the faction you chose"},
 	{ true, L"list",            L"Usage: /list <id> shows players faction and ship"},
 	{ true, L"rinfo",           L"Usage: /rinfo to show you the schedule restarts"},
+	{ true, L"pods",            L"Usage: /pods shows the cargo stored in the cargo pods"},
 	{ true, L"help [command]",	L"Usage: /help [command]\n            /? [command]\n  Gets help on available commands"},
 	{ false,L"?",				HelpInfo[40].wscHelpTxt},
 };
@@ -3597,6 +3660,7 @@ USERCMD UserCmds[] =
 	{ L"/restart",              UserCmd_Restart},
 	{ L"/list",                 UserCmd_List},
 	{ L"/rinfo",                UserCmd_RestartInfo},
+	{ L"/pods",                 UserCmd_Pods},
 	{ L"/help",					UserCmd_Help},
 	{ L"/?",					UserCmd_Help},
 };
@@ -3666,7 +3730,7 @@ void BhKillCheck(uint uiClientID, uint uiKillerID)
 			else
 			{
 				wstring wscWinnerCharname;
-				wscWinnerCharname = (wchar_t*)Players.GetActiveCharacterName(uiKillerID);
+				wscWinnerCharname = Players.GetActiveCharacterName(uiKillerID);
 				if(wscWinnerCharname.size() > 0)
 				{
 					HkAddCash(wscWinnerCharname, it->uiCredits);

@@ -1,5 +1,4 @@
 #include "hook.h"
-#pragma warning(disable:4996)
 
 Archetype::AClassType TypeStrToEnum(string scType);
 uint TypeStrToObjUint(string scType);
@@ -254,6 +253,7 @@ BinaryTree<UINT_WRAP> *set_btFreighterShipArchIDs = new BinaryTree<UINT_WRAP>();
 BinaryTree<UINT_WRAP> *set_btFighterShipArchIDs = new BinaryTree<UINT_WRAP>();
 //Armour
 list<INISECTIONVALUE> lstArmour;
+list<INISECTIONVALUE> lstClass;
 //ranks
 list<INISECTIONVALUE> lstRanks;
 //bountyhunt
@@ -273,6 +273,8 @@ list<INISECTIONVALUE> lstHelpHide;
 list<INISECTIONVALUE> lstServerRestart;
 //FLHash
 list<INISECTIONVALUE> lstFLPaths;
+//Cargo Pods
+BinaryTree<CARGO_POD> *set_btCargoPod = new BinaryTree<CARGO_POD>();
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void LoadSettings()
@@ -842,6 +844,7 @@ void LoadSettings()
 		}
     //Armour
 		IniGetSection(set_scShipsFile, "Armour", lstArmour);
+		IniGetSection(set_scShipsFile, "Class", lstClass);
     //Ranks
 		IniGetSection(set_scShipsFile, "Ranks", lstRanks);
     //Bounyhunt
@@ -861,6 +864,16 @@ void LoadSettings()
 		IniGetSection(set_scCfgGeneralFile, "serverrestart", lstServerRestart);
     //FLHash
 		IniGetSection(set_Freelancer, "Data", lstFLPaths);
+    //Cargo Pods
+		IniGetSection(set_scShipsFile, "CargoPod", lstValues);
+	    set_btCargoPod->Clear();
+	    foreach(lstValues, INISECTIONVALUE, lst)
+		{
+		    uint PodID;
+		    PodID = CreateID(lst->scKey.c_str());
+		    CARGO_POD *pod = new CARGO_POD(PodID,atoi(lst->scValue.c_str()));
+		    set_btCargoPod->Add(pod);
+		}
 		
 
 	} catch(...) { ConPrint(L"Exception in %s, settings likely not loaded\n", stows(__FUNCTION__).c_str()); LOG_EXCEPTION }
