@@ -2,6 +2,7 @@
 #include <float.h>
 #include "hook.h"
 #include "CInGame.h"
+#pragma warning(disable:4996)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -181,7 +182,7 @@ HK_ERROR HkResolveShortCut(wstring wscShortcut, uint &_iClientID)
 	{
 		uint iClientID = HkGetClientIdFromPD(pPD);
 
-		const wchar_t *wszCharname = Players.GetActiveCharacterName(iClientID);
+		const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
 		if(!wszCharname)
 			continue;
 
@@ -251,7 +252,7 @@ HK_ERROR HkGetCharFileName(wstring wscCharname, wstring &wscFilename)
 	HK_GET_CLIENTID(iClientID, wscCharname);
 	// getchafilename from clientid
 	if(iClientID != -1)
-		wscCharname = Players.GetActiveCharacterName(iClientID);
+		wscCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
 
 	_GetFLName GetFLName = (_GetFLName)((char*)hModServer + 0x66370);
 

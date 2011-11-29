@@ -150,6 +150,7 @@ struct ITEM_DROP
 	float fDunno2;
 	uint iNum;
 };
+#pragma optimize("", on)
 bool __cdecl _SpawnItem(void *ecx, void *ret1, void *ret2, uint iShip, uint iDunno2, ITEM_DROP *id, uint iDunno3)
 {
 	//PrintUniverseText(L"Spawned %u " + HkGetWStringFromIDS(id->eqEquip->iIDSName), id->iNum);
@@ -200,6 +201,7 @@ bool __cdecl _SpawnItem(void *ecx, void *ret1, void *ret2, uint iShip, uint iDun
 
 	return true;
 }
+#pragma optimize("", off)
 #pragma warning( disable : 4414 ) //disable "short jump to function converted to near" warning
 __declspec(naked) void _HkCb_SpawnItem()
 {

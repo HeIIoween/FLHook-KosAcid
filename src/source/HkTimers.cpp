@@ -754,29 +754,29 @@ try {
 			    float maxHealth, curHealth;
 			    pub::SpaceObj::GetHealth(ClientInfo[iClientID].iShip, curHealth, maxHealth);
 			    if(timeInMS() >= ClientInfo[iClientID].tmRegenTime && curHealth < maxHealth)
-			    {
-                    float HullNow, MaxHull;
-                    float Regen;
-                    pub::SpaceObj::GetHealth(iShip , HullNow, MaxHull);
+				{
+                                float HullNow, MaxHull;
+                                float Regen;
+                                pub::SpaceObj::GetHealth(iShip , HullNow, MaxHull);
                     Regen = HullNow / MaxHull;
 					if(ClientInfo[iClientID].Repair)
 					{
-                        if (Regen<=0.9f)
-					    {
-						    pub::SpaceObj::SetRelativeHealth(iShip, Regen+0.1f); 
-					    }
-					    else
-					    {
-						    pub::SpaceObj::SetRelativeHealth(iShip, 1.0f);
+                                if (Regen<=0.9f)
+								{
+									pub::SpaceObj::SetRelativeHealth(iShip, Regen+0.1f); 
+								}
+								else
+								{
+									pub::SpaceObj::SetRelativeHealth(iShip, 1.0f);
 						    ClientInfo[iClientID].Repair = false;
 							return;
-					    }
+						}
 					}
 					ClientInfo[iClientID].Repair = true;
 					ClientInfo[iClientID].tmRegenTime = timeInMS() + ClientInfo[iClientID].mTime;
 				}
 			}
-	     }
+		}
 }catch(...) { AddLog("Exception in %s", __FUNCTION__);}}
 
 void HkServerRestart()

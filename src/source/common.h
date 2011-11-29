@@ -51,7 +51,7 @@ public:
 
 class IMPORT BinaryRDLReader
 {
-	char szBuf[1024];
+	unsigned char szBuf[1024];
 
 public:
 	BinaryRDLReader(class BinaryRDLReader const &);
@@ -1202,7 +1202,7 @@ public:
 
 class IMPORT INI_Reader
 {
-	char szBuf[1024];
+	char szBuf[1024*8];
 
 public:
 	INI_Reader(class INI_Reader const &);

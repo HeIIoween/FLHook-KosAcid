@@ -1,6 +1,7 @@
 #include "hook.h"
 #include "CInGame.h"
 #include <stdio.h>
+#pragma warning(disable:4996)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +68,7 @@ HK_ERROR HkGetPlayerInfo(wstring wscCharname, HKPLAYERINFO &pi, bool bAlsoCharme
 	if(iClientID == -1 || (HkIsInCharSelectMenu(iClientID) && !bAlsoCharmenu))
 		return HKE_PLAYER_NOT_LOGGED_IN; // not on server
 
-	const wchar_t *wszActiveCharname = Players.GetActiveCharacterName(iClientID);
+	const wchar_t *wszActiveCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
 
 	pi.iClientID = iClientID;
 	pi.wscCharname = wszActiveCharname ? wszActiveCharname : L"";
@@ -485,6 +486,3 @@ __declspec(naked) void __stdcall HkUnLightFuse(IObjRW *ship, uint iFuseID, float
 void HkTest(int iArg, int iArg2, int iArg3)
 {
 }
-
-//Cargo Pod
-

@@ -88,7 +88,7 @@
 		} \
 		else \
 		{ \
-			if(ToLower(Players.GetActiveCharacterName(a)).find(admin.wscCharRestrict) == -1) \
+			if(ToLower((wchar_t*)Players.GetActiveCharacterName(a)).find(admin.wscCharRestrict) == -1) \
 				return HKE_NAME_NOT_MATCH_RESTRICTION; \
 		} \
 	} \
@@ -132,7 +132,7 @@
 		} \
 		else \
 		{ \
-			if(ToLower(Players.GetActiveCharacterName(a)).find(admin.wscCharRestrict) == -1) \
+			if(ToLower((wchar_t*)Players.GetActiveCharacterName(a)).find(admin.wscCharRestrict) == -1) \
 				return HKE_NAME_NOT_MATCH_RESTRICTION; \
 		} \
 	} \
