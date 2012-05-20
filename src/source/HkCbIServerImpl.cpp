@@ -1079,7 +1079,7 @@ void __stdcall CharacterSelect(struct CHARACTER_ID const & cId, unsigned int iCl
 	wstring wscCharBefore;
 	try {
 		const wchar_t *wszCharname = (wchar_t*)Players.GetActiveCharacterName(iClientID);
-		wscCharBefore = wszCharname; // ? (wchar_t*)Players.GetActiveCharacterName(iClientID) : L"";
+		wscCharBefore = wszCharname ? (wchar_t*)Players.GetActiveCharacterName(iClientID) : L"";
 		ClientInfo[iClientID].iLastExitedBaseID = 0;
 		Server.CharacterSelect(cId, iClientID);
 	} catch(...) {
